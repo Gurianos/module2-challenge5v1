@@ -5,8 +5,21 @@ import './App.css';
 import {
   PublicKey,
   Transaction,
+  Connection,
+  clusterApiUrl,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  SystemProgram,
+  sendAndConfirmRawTransaction,
+  sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import {useEffect , useState } from "react";
+import { getTypeParameterOwner } from 'typescript';
+import { sign } from 'crypto';
+// import * as SolanaWeb3 from '@solana/web3.js'
+
+//add buffer
+window.Buffer = window.Buffer || require('buffer').Buffer;
 
 // create types
 type DisplayEncoding = "utf8" | "hex";
@@ -50,78 +63,238 @@ interface PhantomProvider {
   }
 };
 
+
+
 function App() {
+  
   // create state variable for the provider
-  const [provider, setProvider] = useState<PhantomProvider | undefined>(
-    undefined
+  const [provider, setProvider] = useState<PhantomProvider | undefined>( undefined );
+	// create state variable for the wallet key
+  const [walletKey, setWalletKey] = useState<PhantomProvider | undefined>( undefined );
+  const [towalletkey, setToWalletKey] = useState([] as any );
+  // create state variable for From pubkey
+  const [fromKey, setFromKey] = useState([] as any );
+  // create state variable for From pubkey
+  const [frompubKey, setFrompubKey] = useState([] as any );
+  // create state variable for getwalletBalance
+  const [gwalletbalance, setwalletBalance] = useState([] as any );
+// create state variable for getwalletBalance
+  const [towalletbalance, setTowalletBalance] = useState([] as any );
+
+  // create state variable for SOL transfered sign
+  const [tranSolSign, settranSolSign] = useState([] as any
   );
 
-	// create state variable for the wallet key
-  const [walletKey, setWalletKey] = useState<PhantomProvider | undefined>(
-  undefined
-  );
 
   // this is the function that runs whenever the component updates (e.g. render, refresh)
   useEffect(() => {
-	  const provider = getProvider();
+ 
+   // if the Fromkey exist, set this as fromKey
+   // if (fromKey.publicKey) setFromKey(fromKey);
+   // else setFromKey(undefined);
+   // setFromKey(undefined);
+   // setwalletBalance(undefined);
 
+	const provider = getProvider();
 		// if the phantom provider exists, set this as the provider
 	  if (provider) setProvider(provider);
 	  else setProvider(undefined);
+
   }, []);
 
-  /**
-   * @description prompts user to connect wallet if it exists.
-	 * This function is called when the connect wallet button is clicked
-   */
-  const connectWallet = async () => {
-    // @ts-ignore
-    const { solana } = window;
+    // Create empty Account
+    const CreateSolaccount = async () => {
 
-		// checks if phantom wallet exists
-    if (solana) {
+      if (fromKey.publicKey) setFromKey(fromKey);
+      
+      else { setFromKey( undefined );
+      setwalletBalance( undefined );
+      setFromKey( undefined );
+      setFrompubKey( undefined );
+    
       try {
-				// connects wallet and returns response which includes the wallet public key
-        const response = await solana.connect();
-        console.log('wallet account ', response.publicKey.toString());
-				// update walletKey to be the public key
-        setWalletKey(response.publicKey.toString());
-      } catch (err) {
-      // { code: 4001, message: 'User rejected the request.' }
+        // Create a new keypair
+          const from = Keypair.generate();
+          const frompubkey = from.publicKey.toString();
+          // const from = Keypair.fromSecretKey(Uint8Array.from(fromPair));
+
+        // Var fromKey and frompubKey   
+          setFromKey(from);
+          setFrompubKey(frompubkey);
+
+       console.log("From wallet pubkey ", frompubkey);
+         
+        } catch (err) {
+        console.log(err);
+        }
       }
-    }
-  };
+   };
 
+   // Aidrop 2 SOL to Sender wallet
+    const AirDropSol = async() => {
+       const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+           
+       const fromAirDropSignature = await connection.requestAirdrop(
+            new PublicKey(fromKey.publicKey),
+            2 * LAMPORTS_PER_SOL
+        );
+        // Latest blockhash (unique identifer of the block) of the cluster
+        let latestBlockHash = await connection.getLatestBlockhash();
+    
+        // Confirm transaction using the last valid block height (refers to its time)
+        // to check for transaction expiration
+        await connection.confirmTransaction({
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+            signature: fromAirDropSignature
+        });     
+        console.log("Airdrop completed on : ", frompubKey);
+        setFromKey(fromKey);
+    };
 
+   // Get the wallet balance from a given private key
+   const GetWalletBalance = async () => {
+        setwalletBalance(undefined);
 
+       try {
+        // Connect to the Devnet
+        const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+        console.log("Connection object is:", connection);
+        
+        // Make a wallet (keypair) from privateKey and get its balance
+        // const myWallet = await Keypair.fromSecretKey(fromKey);
+         const Balance = await connection.getBalance(new PublicKey(fromKey.publicKey));
+         const WalletBalance = ((Balance) / LAMPORTS_PER_SOL);
+         console.log(`Wallet balance: ${parseInt(WalletBalance.toString()) / LAMPORTS_PER_SOL} SOL`);
+         
+         setwalletBalance(WalletBalance.toString());
+        // const frompubkey = fromKey.publicKey.toString();  
+        // const frompubkey = fromKey.publicKey;   
+        // setFromKey(frompubkey);
+
+       } catch (err) {
+           console.log(err);
+        }
+    };
+
+      // Show the Sol Airdropped & Balance
+    const CreatAcc = async ()=>{
+          await CreateSolaccount();
+          await AirDropSol();
+          await GetWalletBalance();
+    };
+
+      /**
+       * @description prompts user to connect wallet if it exists.
+       * This function is called when the connect wallet button is clicked
+       */
+  const connectWallet = async () => {
+        // @ts-ignore
+        const { solana } = window;
+
+        // checks if phantom wallet exists
+        if (solana) {
+          try {
+            // connects wallet and returns response which includes the wallet public key
+            const response = await solana.connect();
+                        
+            // update Tokey to be the to public key
+            setToWalletKey(await response);
+            // update walletKey to be the public key viewable
+            setWalletKey(await response.publicKey.toString());
+
+            console.log('wallet account ', response.publicKey.toString());
+          } catch (err) {
+          // { code: 4001, message: 'User rejected the request.' }
+          }
+        }
+      };
+  
   // disconnect wallet
   const decoWallet = async () => {
-    if (provider) {
-      try {
-         await provider.disconnect();
-         console.log('Wallet Disconnected');
-          //  erase key
-          setWalletKey(undefined);
+          if (provider) {
+            try {
+              await provider.disconnect();
+              console.log('Wallet Disconnected');
+                //  erase key
+                setWalletKey(undefined);
+            } catch (err) {
+                  // { code: 4001, message: 'User rejected the request.' }
+              }
+          }
+      };
+
+ const Transol = async () => {
+  // @ts-ignore
+   const { solana } = window;
+    // checks if phantom wallet exists
+     if (solana) {
+           try {
+      
+      // connects wallet and returns response which includes the wallet public key
+      const response = await solana.connect();
+      // const from = Keypair.fromSecretKey(Uint8Array.from(fromKey));
+      
+      // const towallet = await solana.connect();
+      const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+      console.log("Connection object is:", connection);
+     
+            // Send money from "from" wallet and into "to" wallet
+        var transaction = new Transaction().add(
+          SystemProgram.transfer({
+              fromPubkey: fromKey.publicKey,
+              toPubkey: response.publicKey,
+              lamports: 2 * LAMPORTS_PER_SOL
+          })
+        );
+
+      // Sign transaction
+      var signature = await sendAndConfirmTransaction(
+          connection,
+          transaction,
+          [fromKey]
+      );
+      settranSolSign(signature);
+      console.log('Signature is ', signature);
+    
       } catch (err) {
-            // { code: 4001, message: 'User rejected the request.' }
-        }
-    }
- };
-
-
+        // { code: 4001, message: 'User rejected the request.' }
+      }
+     }
+  };     
 
 	// HTML code for the app
   return (
-    <div className="App">
-      <header className="App-header">
-        <h2>Connect to Phantom Wallet</h2>
+ //   <div className="App">
+        <div>
+           <header className="App-header">
+        
+        <h2>Tansfer to connected Phantom Wallet</h2>
+ 
+        {provider && (
+         <button
+            style={{
+              fontSize: "16px",
+              padding: "15px",
+              fontWeight: "bold",
+              borderRadius: "5px",
+            }}
+            onClick={CreatAcc}
+          >
+           1- Create ACC or Drop 2 sol
+          </button>
+       )}
+
+      
+    {frompubKey && !walletKey && (
+      <div>
+      <p><h6>Fromkey is: <>{frompubKey}</></h6> </p>
+      <p><h6>From Ballance : <>{gwalletbalance}</> SOL</h6> </p>
+      </div>
+       )}
 
 
-
-
-
-
-      {provider && !walletKey && (
+      {provider && !walletKey && frompubKey && (
           <button
             style={{
               fontSize: "16px",
@@ -131,12 +304,11 @@ function App() {
             }}
             onClick={connectWallet}
           >
-            Connect Wallet
+            2- Connect Wallet
            </button>
-          )
-      }
+          )}
 
-     {provider && walletKey && (
+{provider && walletKey && (
          <button
             style={{
               fontSize: "16px",
@@ -151,23 +323,42 @@ function App() {
           >
             Disconnect Wallet 
           </button>
-        )
-     }
-
-     {provider && walletKey && (
-        <p>
-          <>
-          Wallet key connected : {walletKey}
-         </>
-         </p> 
         )}
+
+      {provider && walletKey && frompubKey && (
+         <button
+            style={{
+              fontSize: "16px",
+              padding: "15px",
+              fontWeight: "bold",
+              borderRadius: "5px",
+            }}
+            onClick={Transol}
+          >
+          3- Transfer 2 Sol to Phantom
+          </button>
+         )}
+
+      {provider && walletKey && frompubKey &&  (
+             <> 
+             <p><h6> From: {frompubKey} </h6> </p >
+             <p><h6> From Ballance : {gwalletbalance} SOL </h6> </p> 
+             <p><h6> <> ToWallet: {walletKey} </> </h6></p>
+             <p><h6> Signature: {tranSolSign} </h6> </p>
+             </>
+         )}
+
+
+
+
 
         {!provider && (
           <p>
             No provider found. Install{" "}
             <a href="https://phantom.app/">Phantom Browser extension</a>
           </p>
-        )}
+         )}
+     
 
      </header>
     </div>
