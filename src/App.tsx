@@ -1,56 +1,56 @@
-// importfunctionalities
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import {
-  PublicKey,
-  Transaction,
-  Connection,
-  clusterApiUrl,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  SystemProgram,
-  sendAndConfirmRawTransaction,
-  sendAndConfirmTransaction,
-} from "@solana/web3.js";
-import {useEffect , useState } from "react";
-import { getTypeParameterOwner } from 'typescript';
-import { sign } from 'crypto';
-// import * as SolanaWeb3 from '@solana/web3.js'
+  // importfunctionalities
+  import React from 'react';
+  import logo from './logo.svg';
+  import './App.css';
+  import {
+    PublicKey,
+    Transaction,
+    Connection,
+    clusterApiUrl,
+    Keypair,
+    LAMPORTS_PER_SOL,
+    SystemProgram,
+    sendAndConfirmRawTransaction,
+    sendAndConfirmTransaction,
+  } from "@solana/web3.js";
+  import {useEffect , useState } from "react";
+  import { getTypeParameterOwner } from 'typescript';
+  import { sign } from 'crypto';
+  // import * as SolanaWeb3 from '@solana/web3.js'
 
-//add buffer
-window.Buffer = window.Buffer || require('buffer').Buffer;
+  //add buffer
+  window.Buffer = window.Buffer || require('buffer').Buffer;
 
-// create types
-type DisplayEncoding = "utf8" | "hex";
+  // create types
+  type DisplayEncoding = "utf8" | "hex";
 
-type PhantomEvent = "disconnect" | "connect" | "accountChanged";
-type PhantomRequestMethod =
-  | "connect"
-  | "disconnect"
-  | "signTransaction"
-  | "signAllTransactions"
-  | "signMessage";
+  type PhantomEvent = "disconnect" | "connect" | "accountChanged";
+  type PhantomRequestMethod =
+    | "connect"
+    | "disconnect"
+    | "signTransaction"
+    | "signAllTransactions"
+    | "signMessage";
 
-interface ConnectOpts {
-  onlyIfTrusted: boolean;
-}
+  interface ConnectOpts {
+    onlyIfTrusted: boolean;
+  }
 
-// create a provider interface (hint: think of this as an object) to store the Phantom Provider
-interface PhantomProvider {
-  publicKey: PublicKey | null;
-  isConnected: boolean | null;
-  signTransaction: (transaction: Transaction) => Promise<Transaction>;
-  signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
-  signMessage: (
-    message: Uint8Array | string,
-    display?: DisplayEncoding
-  ) => Promise<any>;
-  connect: (opts?: Partial<ConnectOpts>) => Promise<{ publicKey: PublicKey }>;
-  disconnect: () => Promise<void>;
-  on: (event: PhantomEvent, handler: (args: any) => void) => void;
-  request: (method: PhantomRequestMethod, params: any) => Promise<unknown>;
-}
+  // create a provider interface (hint: think of this as an object) to store the Phantom Provider
+  interface PhantomProvider {
+    publicKey: PublicKey | null;
+    isConnected: boolean | null;
+    signTransaction: (transaction: Transaction) => Promise<Transaction>;
+    signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
+    signMessage: (
+      message: Uint8Array | string,
+      display?: DisplayEncoding
+    ) => Promise<any>;
+    connect: (opts?: Partial<ConnectOpts>) => Promise<{ publicKey: PublicKey }>;
+    disconnect: () => Promise<void>;
+    on: (event: PhantomEvent, handler: (args: any) => void) => void;
+    request: (method: PhantomRequestMethod, params: any) => Promise<unknown>;
+  }
 
 /**
  * @description gets Phantom provider, if it exists
@@ -64,79 +64,120 @@ interface PhantomProvider {
 };
 
 
-
-function App() {
-  
-  // create state variable for the provider
-  const [provider, setProvider] = useState<PhantomProvider | undefined>( undefined );
-	// create state variable for the wallet key
-  const [walletKey, setWalletKey] = useState<PhantomProvider | undefined>( undefined );
-  const [towalletkey, setToWalletKey] = useState([] as any );
-  // create state variable for From pubkey
-  const [fromKey, setFromKey] = useState([] as any );
-  // create state variable for From pubkey
-  const [frompubKey, setFrompubKey] = useState([] as any );
-  // create state variable for getwalletBalance
-  const [gwalletbalance, setwalletBalance] = useState([] as any );
-// create state variable for getwalletBalance
-  const [towalletbalance, setTowalletBalance] = useState([] as any );
-
-  // create state variable for SOL transfered sign
-  const [tranSolSign, settranSolSign] = useState([] as any
-  );
-
-
-  // this is the function that runs whenever the component updates (e.g. render, refresh)
-  useEffect(() => {
- 
-   // if the Fromkey exist, set this as fromKey
-   // if (fromKey.publicKey) setFromKey(fromKey);
-   // else setFromKey(undefined);
-   // setFromKey(undefined);
-   // setwalletBalance(undefined);
-
-	const provider = getProvider();
-		// if the phantom provider exists, set this as the provider
-	  if (provider) setProvider(provider);
-	  else setProvider(undefined);
-
-  }, []);
-
-    // Create empty Account
-    const CreateSolaccount = async () => {
-
-      if (fromKey.publicKey) setFromKey(fromKey);
-      
-      else { setFromKey( undefined );
-      setwalletBalance( undefined );
-      setFromKey( undefined );
-      setFrompubKey( undefined );
+  function App() {
     
-      try {
-        // Create a new keypair
-          const from = Keypair.generate();
-          const frompubkey = from.publicKey.toString();
-          // const from = Keypair.fromSecretKey(Uint8Array.from(fromPair));
+    // create state variable for the provider
+      const [provider, setProvider] = useState<PhantomProvider | undefined>( undefined );
+      // create state variable for the wallet key
+      const [walletKey, setWalletKey] = useState<PhantomProvider | undefined>( undefined );
+      const [towalletkey, setToWalletKey] = useState([] as any );
+      // create state variable for From pubkey
+      const [fromKey, setFromKey] = useState([] as any );
+      // create state variable for From pubkey
+      const [frompubKey, setFrompubKey] = useState([] as any );
+      // create state variable for getwalletBalance
+      const [gwalletbalance, setwalletBalance] = useState([] as any );
+      // create state variable for getwalletBalance
+      const [towalletbalance, setTowalletBalance] = useState([] as any );
+      // create state variable for SOL transfered sign
+      const [tranSolSign, settranSolSign] = useState([] as any
+    );
 
-        // Var fromKey and frompubKey   
-          setFromKey(from);
-          setFrompubKey(frompubkey);
 
-       console.log("From wallet pubkey ", frompubkey);
-         
-        } catch (err) {
-        console.log(err);
+    // this is the function that runs whenever the component updates (e.g. render, refresh)
+    useEffect(() => {
+  
+    // if the Fromkey exist, set this as fromKey
+    // if (fromKey.publicKey) setFromKey(fromKey);
+    // else setFromKey(undefined);
+    // setFromKey(undefined);
+    // setwalletBalance(undefined);
+
+    const provider = getProvider();
+      // if the phantom provider exists, set this as the provider
+      if (provider) setProvider(provider);
+      else setProvider(undefined);
+
+    }, []);
+
+
+
+      // Create empty Account
+      const CreateSolaccount = async () => {
+
+    // if (fromKey.publicKey) setFromKey(frompubKey);
+        if (fromKey.publicKey) {      
+          setFrompubKey(frompubKey);
+          setFromKey(fromKey);
+
+          await AirDropSol();
+          await GetWalletBalance();
         }
-      }
-   };
 
-   // Aidrop 2 SOL to Sender wallet
+        else {
+            setFrompubKey(undefined);
+            setFromKey(undefined);
+            setwalletBalance("None");
+      
+        try {
+        // 1 - Create a new keypair
+            const from = Keypair.generate();
+            const frompubkey = from.publicKey.toString();
+            // const from = Keypair.fromSecretKey(Uint8Array.from(fromPair));
+            console.log("From wallet pubkey ", frompubkey);
+
+            // Var fromKey and frompubKey   
+             setFromKey(from);
+             setFrompubKey(frompubkey);
+
+        // Connect to the Devnet
+          const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+          console.log("Connection object is:", connection);
+
+        // 2 - start AirDrop      
+            const fromAirDropSignature = await connection.requestAirdrop(
+              new PublicKey(from.publicKey),
+              2 * LAMPORTS_PER_SOL
+          );
+          // Latest blockhash (unique identifer of the block) of the cluster
+          let latestBlockHash = await connection.getLatestBlockhash();
+      
+          // Confirm transaction using the last valid block height (refers to its time)
+          // to check for transaction expiration
+          await connection.confirmTransaction({
+              blockhash: latestBlockHash.blockhash,
+              lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+              signature: fromAirDropSignature
+          });     
+
+          console.log("Airdrop completed on : ", frompubKey);
+         
+
+        // 3 - GetWalletBalance
+
+        const Balance = await connection.getBalance(new PublicKey(from.publicKey));
+        const WalletBalance = ((Balance) / LAMPORTS_PER_SOL);
+
+        console.log(`Wallet balance: ${parseInt(WalletBalance.toString()) / LAMPORTS_PER_SOL} SOL`);
+        
+        const PushWalletBalance = WalletBalance.toString();
+             setwalletBalance(PushWalletBalance);
+
+          } catch (err) {
+          console.log(err);
+          }
+        }
+    };
+
+
+   // Aidrop 1 SOL to Sender wallet for Fees
     const AirDropSol = async() => {
        const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-           
+       console.log("Connection object is:", connection);
+
        const fromAirDropSignature = await connection.requestAirdrop(
             new PublicKey(fromKey.publicKey),
-            2 * LAMPORTS_PER_SOL
+            1 * LAMPORTS_PER_SOL
         );
         // Latest blockhash (unique identifer of the block) of the cluster
         let latestBlockHash = await connection.getLatestBlockhash();
@@ -148,13 +189,16 @@ function App() {
             lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
             signature: fromAirDropSignature
         });     
+
         console.log("Airdrop completed on : ", frompubKey);
         setFromKey(fromKey);
+        setFrompubKey(frompubKey);
+        
     };
 
    // Get the wallet balance from a given private key
    const GetWalletBalance = async () => {
-        setwalletBalance(undefined);
+        setwalletBalance(0);
 
        try {
         // Connect to the Devnet
@@ -163,7 +207,7 @@ function App() {
         
         // Make a wallet (keypair) from privateKey and get its balance
         // const myWallet = await Keypair.fromSecretKey(fromKey);
-         const Balance = await connection.getBalance(new PublicKey(fromKey.publicKey));
+         const Balance = await connection.getBalance(new PublicKey(frompubKey));
          const WalletBalance = ((Balance) / LAMPORTS_PER_SOL);
          console.log(`Wallet balance: ${parseInt(WalletBalance.toString()) / LAMPORTS_PER_SOL} SOL`);
          
@@ -177,12 +221,14 @@ function App() {
         }
     };
 
+    /*
       // Show the Sol Airdropped & Balance
     const CreatAcc = async ()=>{
           await CreateSolaccount();
           await AirDropSol();
           await GetWalletBalance();
     };
+    */
 
       /**
        * @description prompts user to connect wallet if it exists.
@@ -244,7 +290,7 @@ function App() {
           SystemProgram.transfer({
               fromPubkey: fromKey.publicKey,
               toPubkey: response.publicKey,
-              lamports: 2 * LAMPORTS_PER_SOL
+              lamports: 1 * LAMPORTS_PER_SOL
           })
         );
 
@@ -279,9 +325,9 @@ function App() {
               fontWeight: "bold",
               borderRadius: "5px",
             }}
-            onClick={CreatAcc}
+            onClick={CreateSolaccount}
           >
-           1- Create ACC or Drop 2 sol
+           1- Create ACC with 2 Sole or 1 more SOL for fees
           </button>
        )}
 
@@ -347,9 +393,6 @@ function App() {
              <p><h6> Signature: {tranSolSign} </h6> </p>
              </>
          )}
-
-
-
 
 
         {!provider && (
