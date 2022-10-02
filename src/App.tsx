@@ -77,8 +77,9 @@ function App() {
   // create state variable for getwalletBalance
   const [gwalletbalance, setwalletBalance] = useState([] as any);
   // create state variable for SOL transfered sign
-  const [tranSolSign, settranSolSign] = useState([] as any
-  );
+  const [tranSolSign, settranSolSign] = useState([] as any);
+  // create state variable for SOL transfered sign
+  const [ADtranSolSign, setADtranSolSign] = useState([] as any);
 
 
   // this is the function that runs whenever the component updates (e.g. render, refresh)
@@ -95,7 +96,6 @@ function App() {
 
   // Get the wallet balance from a given private key
   const GetWalletBalance = async () => {
-  
     try {
       // Connect to the Devnet
       const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
@@ -103,7 +103,7 @@ function App() {
 
       // Make a wallet (keypair) from privateKey and get its balance
       const Balance = await connection.getBalance(new PublicKey(frompubKey));
-      const WalletBalance1 = parseFloat((Balance / LAMPORTS_PER_SOL).toFixed(8));  
+      const WalletBalance1 = ((parseFloat((Balance / LAMPORTS_PER_SOL).toFixed(8))).toString());  
      //  console.log(`Wallet balance: ${parseInt(WalletBalance1.toString()) / LAMPORTS_PER_SOL} SOL`);
   
       // update walletBalance var
@@ -121,11 +121,9 @@ function App() {
   // Create empty Account Drop 2 Sol and getBalance
   const CreateSolaccount = async () => {
 
+   //add 1 more fees for transol
     // if (fromKey.publicKey) setFromKey(frompubKey);
     if (fromKey.publicKey) {
-    //  setFrompubKey(frompubKey);
-    //  setFromKey(fromKey);
-    //  settranSolSign(undefined);
 
       await AirDropSol();
       await GetWalletBalance();
@@ -142,8 +140,8 @@ function App() {
        
         // Var fromKey and frompubKey   
         setFromKey(from);
-        const frompubKey1 = await from.publicKey.toString();
-        setFrompubKey(frompubKey1);
+        const frompubKey1 = from.publicKey.toString();
+        setFrompubKey(await frompubKey1);
         console.log("From wallet pubkey ", from.publicKey.toString);
 
         //  2 - Connect to the Devnet for Airdrop
@@ -164,10 +162,11 @@ function App() {
           blockhash: latestBlockHash.blockhash,
           lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
           signature: fromAirDropSignature
-        });
+        }
+        );
 
-      
-      console.log("Airdrop completed on : ", from.publicKey.toString());
+        setADtranSolSign(fromAirDropSignature);
+         console.log("Airdrop completed on : ", frompubKey1);
 
         // 3 - GetWalletBalance
         await GetWalletBalance();
@@ -201,8 +200,9 @@ function App() {
       lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       signature: fromAirDropSignature
     });
-
     console.log("Airdrop completed on : ", frompubKey);
+    setADtranSolSign(fromAirDropSignature);
+   
 
   //  await GetWalletBalance();
       } catch (err) {
@@ -251,8 +251,7 @@ function App() {
       // checks if phantom wallet exists
 
       if (solana) {
-      try {
-         
+      try {       
          // connects wallet and returns response which includes the wallet public key
           const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
           console.log("Connection object is:", connection);
@@ -261,7 +260,6 @@ function App() {
           var transaction = new Transaction().add(
             SystemProgram.transfer({
               fromPubkey: fromKey.publicKey,
-              //  toPubkey: response.publicKey,
               toPubkey: towalletkey.publicKey,
               lamports: 2 * LAMPORTS_PER_SOL
             })
@@ -276,12 +274,12 @@ function App() {
 
           settranSolSign(signature);
           console.log('Signature is ', signature);
-
           await GetWalletBalance();
 
         } catch (err) {
           // { code: 4001, message: 'User rejected the request.' }
         }
+        await GetWalletBalance();
      } }
   };
 
@@ -334,6 +332,7 @@ function App() {
           <div>
             <p><h6>Fromkey is: <>{frompubKey}</></h6> </p>
             <p><h6>From Ballance : <>{gwalletbalance}</> SOL</h6> </p>
+            <p><h6> Air Drop Signature: <>{ADtranSolSign}</> </h6> </p>
           </div>
         )}
 
@@ -389,7 +388,7 @@ function App() {
           <p><h6> From Ballance : {gwalletbalance} SOL </h6> </p>
           <p><h6> <> ToWallet: {walletKey} </> </h6></p>
           <p><a href="https://explorer.solana.com/&#x3F;cluster=devnet"> Solana Explorer devnet</a></p>
-          <p><h6> Signature: {tranSolSign} </h6> </p>
+          <p><h6> Sent to Signature: {tranSolSign} </h6> </p>
         </>
 
         )}
