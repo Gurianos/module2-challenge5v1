@@ -1,4 +1,4 @@
-Challenge 5
+Challenge 5 - Script sthat works
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -45,3 +45,22 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+
+npx create-react-app module2-challenge5 --template typescript
+cd Module2Challenge5
+
+yarn add @testing-library/dom@>=7.21.4
+yarn add @babel/plugin-syntax-flow@^7.14.5
+yarn add @babel/plugin-transform-react-jsx@^7.14.9
+yarn add @babel/core
+yarn add @solana/web3.js
+yarn add @types/node
+yarn add @babel/core
+yarn add @testing-library/dom@>=7.21.4
+yarn add @solana/buffer-layout
+yarn add @usedapp/core
+
+"GENERATE_SOURCEMAP=false" > ./.env
+
+yarn start
